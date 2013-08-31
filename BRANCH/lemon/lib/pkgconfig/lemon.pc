@@ -1,0 +1,10 @@
+prefix=/home_girkelab/ebao/bigdata/COASSEMBLY/workspace/test/lemon-1.2.2
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: LEMON
+Description: Library for Efficient Modeling and Optimization in Networks
+Version: 1.2.2
+Libs: -L${libdir} -lemon          
+Cflags: -I${includedir}
