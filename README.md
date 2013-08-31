@@ -10,7 +10,7 @@ BRANCH is a software that extends de novo transfrags and identifies novel transf
 <a name="cite"/>
 ### How to cite BRANCH?
 If you use BRANCH, please cite the following paper:  
-Bao E, Jiang T, Girke T (2013). BRANCH: boosting RNA-Seq assemblies with partial or related genomic sequences. Bioinformatics: [epub](http://www.hubmed.org/display.cgi?uids=23493323).
+Bao E, Jiang T, Girke T (2013). BRANCH: boosting RNA-Seq assemblies with partial or related genomic sequences. Bioinformatics: [epub](http://bioinformatics.oxfordjournals.org/content/29/10/1250).
 
 <a name="manual"/>
 ### Short manual
