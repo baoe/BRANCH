@@ -27,7 +27,6 @@ Bao E, Jiang T, Girke T (2013). BRANCH: boosting RNA-Seq assemblies with partial
    * To use the modified BLAT, put it to your $PATH: export PATH=PATH2BLAT:$PATH.
 
 3. Input
-
    * Single- or paired-end RNA reads in FASTA format.
    * De novo transfrags assembled by any de novo RNA assembler (Velvet/Oases, Trinity, etc.).
    * DNA contigs assembled by any de novo DNA assembler (Velvet, ABySS, etc.) or genome/gene sequences from a closely related species.
