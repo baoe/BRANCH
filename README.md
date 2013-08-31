@@ -23,8 +23,8 @@ Bao E, Jiang T, Girke T (2013). BRANCH: boosting RNA-Seq assemblies with partial
    The [LEMON](http://lemon.cs.elte.hu/trac/lemon) graph library is required to compile and run BRANCH.  
    The [BLAT](http://genome.ucsc.edu/FAQ/FAQblat.html) aligner is required to run BRANCH and the modified version (distributed with BRANCH) is highly recommended.  
    * Download the .cpp file.
-   * If LEMON is already installed in your system, execute the command line: g++ -o BRANCH BRANCH.cpp -lemon -lpthread; otherwise, down load LEMON, compile it, and execute: g++ -o BRANCH -I PATH2LEMON/include BRANCH.cpp -L PATH2LEMON/bin -lpthread.
-   * To use the modified BLAT, put it to your $PATH: export PATH=PATH2BLAT:$PATH.
+   * If LEMON is already installed in your system, execute the command line: `g++ -o BRANCH BRANCH.cpp -lemon -lpthread`; otherwise, down load LEMON, compile it, and execute: `g++ -o BRANCH -I PATH2LEMON/include BRANCH.cpp -L PATH2LEMON/bin -lpthread`.
+   * To use the modified BLAT, put it to your $PATH: `export PATH=PATH2BLAT:$PATH`.
 
 3. Input
    * Single- or paired-end RNA reads in FASTA format.
