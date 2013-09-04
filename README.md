@@ -1,11 +1,16 @@
 ##### Contents
 [Overview] (#overview)  
+[Copy right] (#copyright)  
 [How to cite BRANCH?] (#cite)  
 [Short Manual] (#manual)  
 
 <a name="overview"/>
 ### Overview
 BRANCH is a software that extends de novo transfrags and identifies novel transfrags with DNA contigs or genes of close related species. BRANCH discovers novel exons first and then extends/joins fragmented de novo transfrags, so that the resulted transfrags are more complete.
+
+<a name="copyright"/>
+###Copy right
+BRANCH is under the [Artistic License 2.0](http://opensource.org/licenses/Artistic-2.0).
 
 <a name="cite"/>
 ### How to cite BRANCH?
