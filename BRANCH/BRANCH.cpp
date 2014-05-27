@@ -86,7 +86,7 @@ vector<vector<int> > maxMatch;
 
 int PE = 1;
 
-void parse(char buf[], int & targetID, int & targetStart, int & targetEnd, int & targetGap, int & sourceID, int & sourceStart, int & sourceEnd, int & sourceGap, int & sourceSize, vector<Segment> & seg, int & fr)
+void parse(string buf, int & targetID, int & targetStart, int & targetEnd, int & targetGap, int & sourceID, int & sourceStart, int & sourceEnd, int & sourceGap, int & sourceSize, vector<Segment> & seg, int & fr)
 {
 	char targetIDBuf[20] = {'\0'}, targetStartBuf[20] = {'\0'}, targetEndBuf[20] = {'\0'}, targetGapBuf[20] = {'\0'}, sourceIDBuf[20] = {'\0'}, sourceStartBuf[20] = {'\0'}, sourceEndBuf[20] = {'\0'}, sourceGapBuf[20] = {'\0'}, sourceSizeBuf[20] = {'\0'}, blockBuf[20] = {'\0'};
 	int item = 0, i, j0 = 0, j1 = 0, j2 = 0, j3 = 0, j4 = 0, j5 = 0, j6 = 0, j7 = 0, j8 = 0, j9 = 0, k, tag0 = 1, tag1 = 0, tag2 = 0, tag4 = 1, sp;
@@ -94,7 +94,7 @@ void parse(char buf[], int & targetID, int & targetStart, int & targetEnd, int &
 
 	seg.clear();
 
-	for(i = 0; i < 5000; i ++)
+	for(i = 0; i < buf.size(); i ++)
 	{
 		if(buf[i] == '	')
 		{
@@ -200,7 +200,7 @@ int parseBLAT(ifstream & a, vector<vector<Position> > & v, double threshold1, do
 	vector<Segment> seg;
 	Position pos;
 	vector<Position> posVec;
-	char buf[5000];
+	string buf;
 
 	v.clear();
 
@@ -210,7 +210,7 @@ int parseBLAT(ifstream & a, vector<vector<Position> > & v, double threshold1, do
 	{
 		while(a.good())
 		{
-			a.getline(buf, 5000);
+			getline(a, buf);
 			if(buf[0] == 0) break;
 
 			parse(buf, targetID, targetStart, targetEnd, targetGap, sourceID, sourceStart, sourceEnd, sourceGap, sourceSize, seg, fr);
@@ -483,7 +483,7 @@ void mapReads2Transfrags(int insertLow, int insertHigh)
 	ifstream rai1, rai2;
 	ofstream rao1, rao2;
 	int i, tp, tbp, vp1, vp2, pp1, pp2, vp, tag, start, end, batchStartID, finish1, finish2;
-	char buf[5000];
+	string buf;
 	vector<Segment> seg;
 	Position pos;
 	vector<Position> posVec;
@@ -510,13 +510,13 @@ void mapReads2Transfrags(int insertLow, int insertHigh)
 	{
 		while(t.good())
 		{
-			t.getline(buf, 5000);
+			getline(t, buf);
 			if(buf[0] == 0) break;
 			if(buf[0] == '>')
 				transVec.push_back(transBaseVec);
 			else
 			{
-				for(i = 0; i < t.gcount() - 1; i ++)
+				for(i = 0; i < buf.size(); i ++)
 				{
 					tp = transVec.size() - 1;
 					transVec[tp].push_back(1);
@@ -593,7 +593,7 @@ cont:
         {
                 while(rai1.good())
                 {
-                        rai1.getline(buf, 5000);
+                        getline(rai1, buf);
                         if(buf[0] == 0) break;
 
                         parse(buf, targetID, targetStart, targetEnd, targetGap, sourceID, sourceStart, sourceEnd, sourceGap, sourceSize, seg, fr);
@@ -601,14 +601,14 @@ cont:
                         {
                                 if(v[sourceID] == 0)
                                 {
-                                        for(i = 0; i < rai1.gcount() - 1; i ++)
+                                        for(i = 0; i < buf.size(); i ++)
                                                 rao1 << buf[i];
                                         rao1 << endl;
                                 }
                         }
                         else
                         {
-                                for(i = 0; i < rai1.gcount() - 1; i ++)
+                                for(i = 0; i < buf.size(); i ++)
                                         rao1 << buf[i];
                                 rao1 << endl;
                         }
@@ -616,7 +616,7 @@ cont:
 
                 while(rai2.good())
                 {
-                        rai2.getline(buf, 5000);
+                        getline(rai2, buf);
                         if(buf[0] == 0) break;
 
                         parse(buf, targetID, targetStart, targetEnd, targetGap, sourceID, sourceStart, sourceEnd, sourceGap, sourceSize, seg, fr);
@@ -624,14 +624,14 @@ cont:
                         {
                                 if(v[sourceID] == 0)
                                 {
-                                        for(i = 0; i < rai2.gcount() - 1; i ++)
+                                        for(i = 0; i < buf.size(); i ++)
                                                 rao2 << buf[i];
                                         rao2 << endl;
                                 }
                         }
                         else
                         {
-                                for(i = 0; i < rai2.gcount() - 1; i ++)
+                                for(i = 0; i < buf.size(); i ++)
                                         rao2 << buf[i];
                                 rao2 << endl;
                         }
@@ -649,7 +649,7 @@ void mapTransfrags2Contigs(string st, int threshSplit)
 {
 	ifstream c;
 	ifstream ta;
-	char buf[5000];
+	string buf;
 	int i, tag, cp, cbp, vp, pp, seqID = -1, batchStartID, finish;
 	BC bc;
 	vector<vector<Position> > v;
@@ -663,15 +663,15 @@ void mapTransfrags2Contigs(string st, int threshSplit)
 	{
 		while(c.good())
 		{
-			c.getline(buf, 5000);
+			getline(c, buf);
 			if(buf[0] == 0) break;
 			if(buf[0] == '>')
-		{
+			{
 				contiVec.push_back(contiBaseVec);
 			}
 			else
 			{
-				for(i = 0; i < c.gcount() - 1; i ++)
+				for(i = 0; i < buf.size(); i ++)
 				{
 					cp = contiVec.size() - 1;
 					bc.B = bc.C = 0;
@@ -2137,7 +2137,7 @@ cont:
 
 void formalizeInput(ifstream & in, string file)
 {
-	char buf[5000000];
+	string buf;
 	int i, sp, bp;
 	unsigned long seqID = 0;
 	ofstream out;
@@ -2152,13 +2152,13 @@ void formalizeInput(ifstream & in, string file)
 		{
 			while(in.good())
 			{
-				in.getline(buf, 5000000);
+				getline(in, buf);
 				if(buf[0] == 0)
 					break;
 				if(buf[0] == '>')
 					seqVec.push_back(sv);
 				else
-					for(i = 0; i < in.gcount() - 1; i ++)
+					for(i = 0; i < buf.size(); i ++)
 						seqVec[seqVec.size() - 1].push_back(buf[i]);
 			}
 
@@ -2188,20 +2188,20 @@ void formalizeInput(ifstream & in, string file)
 		{
 			while(in.good())
 			{
-				in.getline(buf, 5000000);
+				getline(in, buf);
 				if(buf[0] == 0)
 					break;
 				if(buf[0] == '>')
 				{
-					in.getline(buf, 5000000);
+					getline(in, buf);
 					out << ">" << seqID ++ << endl;
-					for(i = 0; i < in.gcount() - 1; i ++)
+					for(i = 0; i < buf.size(); i ++)
 						out << buf[i];
 					out << endl;
 				}
 				else
 				{
-					for(i = 0; i < in.gcount() - 1; i ++)
+					for(i = 0; i < buf.size(); i ++)
 						out << buf[i];
 					out << endl;
 				}		
@@ -2217,7 +2217,7 @@ void formalizeInput(ifstream & in, string file)
 
 void formalizeSingleReads(ifstream & in, string file1, string file2, int & insertLow, int & insertHigh)
 {
-	char buf[5000];
+	string buf;
 	int i, tag = 0;
 	unsigned long seqID = 0;
 	ofstream out1;
@@ -2230,7 +2230,7 @@ void formalizeSingleReads(ifstream & in, string file1, string file2, int & inser
 	{
 		while(in.good())
 		{
-			in.getline(buf, 5000);
+			getline(in, buf);
 			if(buf[0] == 0)
 				break;
 			if(buf[0] == '>')
@@ -2240,18 +2240,18 @@ void formalizeSingleReads(ifstream & in, string file1, string file2, int & inser
 			}
 			else
 			{
-				for(i = 0; i < (in.gcount() - 1) / 2; i ++)
+				for(i = 0; i < buf.size() / 2; i ++)
 					out1 << buf[i];
 				out1 << endl;
-				for(i = (in.gcount() - 1) / 2; i < in.gcount() - 1; i ++)
+				for(i = buf.size() / 2; i < buf.size(); i ++)
 					out2 << buf[i];
 				out2 << endl;
 				if(tag == 0)
 				{
-					insertLow = insertHigh = in.gcount() - 1;
+					insertLow = insertHigh = buf.size();
 					tag = 1;
 				}
-				else if(tag == 1 && insertLow != in.gcount() - 1)
+				else if(tag == 1 && insertLow != buf.size())
 				{
 					cout << "INVALID INPUT FILE!" << endl;
 					exit(-1);
@@ -2275,7 +2275,7 @@ typedef struct SeqMappedStruct
 void generateFinalTranscripts(ofstream & it)
 {
 	ifstream tf, tc, tfa, tca;
-	char buf[5000];
+	string buf;
 	vector<SeqMapped> transfrags;
 	vector<SeqMapped> transcripts;
 	SeqMapped sm;
@@ -2293,13 +2293,13 @@ void generateFinalTranscripts(ofstream & it)
 	{
 		while(tf.good())
 		{
-			tf.getline(buf, 5000);
+			getline(tf, buf);
 			if(buf[0] == 0)
 				break;
 			if(buf[0] == '>')
 				transfrags.push_back(sm);
 			else
-				for(i = 0; i < tf.gcount() - 1; i ++)
+				for(i = 0; i < buf.size(); i ++)
 					transfrags[transfrags.size() - 1].seq.push_back(buf[i]);
 		}
 	}
@@ -2313,13 +2313,13 @@ void generateFinalTranscripts(ofstream & it)
         {
                 while(tc.good())
                 {
-                        tc.getline(buf, 5000);
+                        getline(tc, buf);
                         if(buf[0] == 0)
                                 break;
                         if(buf[0] == '>')
                                 transcripts.push_back(sm);
                         else
-                                for(i = 0; i < tc.gcount() - 1; i ++)
+                                for(i = 0; i < buf.size(); i ++)
                                         transcripts[transcripts.size() - 1].seq.push_back(buf[i]);
                 }
         }
