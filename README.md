@@ -57,7 +57,8 @@ Bao E, Jiang T, Girke T (2013). BRANCH: boosting RNA-Seq assemblies with partial
    --threshSplit is the minimum upstream and downstream junction coverages to split a genome region into more than one exons (default: 2)  
    --threshConn is the minimum connectivity of two exons that could be identified as a splice junction (default: 2)  
    --closeGap closes sequencing gaps using PE read information (default: none)  
-   --noAlignment skips the initial time-consuming alignment step, if all the alignment files have been provided in tmp directory (default: none)
+   --noAlignment skips the initial time-consuming alignment step, if all the alignment files have been provided in tmp directory (default: none)  
+   --misassemblyRemoval detects and then breaks at or removes misassembed regions (default: none)  
 
 5. Output
 

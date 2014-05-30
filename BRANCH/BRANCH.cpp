@@ -1,3 +1,13 @@
+//**********************************************************************************
+//* Title: BRANCH: boosting RNA-Seq assemblies with partial or related genomic sequences
+//* Platform: 64-Bit Linux
+//* Author: Ergude Bao
+//* Affliation: Department of Computer Science & Engineering
+//* University of California, Riverside
+//* Date: 03/14/2013
+//* Copy Right: Artistic License 2.0
+//**********************************************************************************
+
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -2266,13 +2276,150 @@ void formalizeSingleReads(ifstream & in, string file1, string file2, int & inser
 	}
 }
 
+int isConflict(int x1, int y1, int x2, int y2)
+{
+	if(x1 <= x2 && x2 <= y1 && y1 <= y2 && (int)y1 - (int)x2 >= 100 || x2 <= x1 && x1 <= y2 && y2 <= y1 && (int)y2 - (int)x1 >= 100 || x1 <= x2 && x2 <= y2 && y2 <= y1 && (int)y2 - (int)x2 >= 100 || x2 <= x1 && x1 <= y1 && y1 <= y2 && (int)y1 - (int)x1 >= 100 || x1 <= x2 && y2 <= y1 || x2 <= x1 && y1 <= y2)
+		return 1;
+	else
+		return 0;
+}
+
+void removeMisassembly(int threshCov)
+{
+	ifstream ta, t;
+	ofstream ct;
+	int batchStartID, i, pp, ppp, seqID, s, e, keep, finish, sep, bp, coverage, ID;
+	vector<vector<Position> > pos;
+	string buf;
+	vector<vector<char> > transfrags;
+	vector<char> transfrag;
+	vector<int> start;
+	vector<int> end;
+
+	t.open("tmp/_transfrags.fa");
+	ta.open("tmp/_transfrags_contigs.psl");
+	ct.open("tmp/_corrected_transfrags.fa");
+
+	if(t.is_open())
+	{
+		while(t.good())
+		{
+			getline(t, buf);
+			if(buf[0] == 0) break;
+
+			if(buf[0] == '>') 
+				transfrags.push_back(transfrag);
+			else
+				for(i = 0; i < buf.size(); i ++)
+					transfrags[transfrags.size() - 1].push_back(buf[i]);
+		}
+	}
+	else
+	{
+		cout << "CANNOT OPEN FILE! (ERROR 9)" << endl;
+		exit(-1);
+	}
+
+	batchStartID = -1;
+batch:
+	finish = parseBLAT(ta, pos, GAPPED_IDENTITY, GAPPED_IDENTITY, batchStartID);
+
+	seqID = 0;
+        for(pp = 0; pp < pos.size(); pp ++)
+	{
+		start.clear(); end.clear();
+		for(ppp = 0; ppp < pos[pp].size(); ppp ++)
+		{
+			if(pos[pp][ppp].targetID != -1)
+			{
+				s = pos[pp][ppp].seg[0].sourceStart;
+				e = pos[pp][ppp].seg[pos[pp][ppp].seg.size() - 1].sourceStart + pos[pp][ppp].seg[pos[pp][ppp].seg.size() - 1].size;
+
+				keep = 1;
+				for(sep = 0; sep < start.size();)
+				{
+					if(isConflict(start[sep], end[sep], s, e) == 1)
+					{
+						if(e - s < end[sep] - start[sep])
+							keep = 0;
+						else
+						{
+							start.erase(start.begin() + sep);
+							end.erase(end.begin() + sep);
+							continue;
+						}
+					}
+					sep ++;
+				}
+
+				if(keep == 1)
+				{
+					start.push_back(s);
+					end.push_back(e);
+				}
+			}
+		}
+		
+		ID = batchStartID + 1 + pp;
+		if(start.size() == 2)
+		{
+			if(start[0] < start[1])
+			{
+				s = end[0] < start[1] ? end[0] : start[1];
+				e = end[0] < start[1] ? start[1] : end[0];
+			}
+			else
+			{
+				s = end[1] < start[0] ? end[1] : start[0];
+				e = end[1] < start[0] ? start[0] : end[1];
+			}
+			for(coverage = 0, bp = s; bp < e; bp ++)
+				coverage = coverage + transVec[ID][bp];
+
+			if(s == e && coverage < threshCov  || coverage / (e - s) < threshCov)
+			{
+
+				ct << ">" << seqID ++ << endl;
+				for(bp = 0; bp < e; bp ++)
+				{
+					ct << transfrags[ID][bp];
+					if((bp + 1) % 60 == 0 || bp == e - 1)
+						ct << endl;
+				}
+				ct << ">" << seqID ++ << endl;
+				for(bp = s; bp < transfrags[ID].size(); bp ++)
+				{
+					ct << transfrags[ID][bp];
+					if((bp - s + 1) % 60 == 0 || bp == transfrags[ID].size() - 1)
+						ct << endl;
+				}
+				continue;
+			}
+		}
+
+		ct << ">" << seqID ++ << endl;
+		for(bp = 0; bp < transfrags[ID].size(); bp ++)
+		{
+			ct << transfrags[ID][bp];
+			if((bp + 1) % 60 == 0 || bp == transfrags[ID].size() - 1)
+				ct << endl;
+		}
+	}
+
+	if(!finish)
+	{
+		batchStartID = batchStartID + 1000000;
+		goto batch;
+	}
+}
+
 typedef struct SeqMappedStruct
 {
 	vector<char> seq;
 	int mapped;
 } SeqMapped;
 
-void generateFinalTranscripts(ofstream & it)
+void generateFinalTranscripts(ofstream & it, int misassemblyRemoval, int threshCov)
 {
 	ifstream tf, tc, tfa, tca;
 	string buf;
@@ -2283,8 +2430,22 @@ void generateFinalTranscripts(ofstream & it)
 	vector<vector<Position> > v, u;
 	int vp, up, pp, seqID = 0, counter, i, tvp, tcp, tfp, pointerBak, tag;
 
-	system("blat tmp/_transcripts.fa tmp/_transfrags.fa -noHead tmp/_transfrags_transcripts.psl >> tmp/blat_doc.txt");
-	tf.open("tmp/_transfrags.fa");
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Only correct parts of transfrags are used to generate extended transfrags, so misassemblies only occur in extended parts of transfrags and can be avoided by filtration. Therefore, the misassembly correction is only necessary for the initial transfrags, i.e. _transfrags.fa.
+
+	if(misassemblyRemoval == 0)
+	{
+		system("blat tmp/_transcripts.fa tmp/_transfrags.fa -noHead tmp/_transfrags_transcripts.psl >> tmp/blat_doc.txt");
+		tf.open("tmp/_transfrags.fa");
+	}
+	else
+	{
+		removeMisassembly(threshCov);
+		system("blat tmp/_transcripts.fa tmp/_corrected_transfrags.fa -noHead tmp/_transfrags_transcripts.psl >> tmp/blat_doc.txt");
+		tf.open("tmp/_corrected_transfrags.fa");
+	}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	tc.open("tmp/_transcripts.fa");
 	tfa.open("tmp/_transfrags_transcripts.psl");
 
@@ -2305,7 +2466,7 @@ void generateFinalTranscripts(ofstream & it)
 	}
 	else
 	{
-		cout << "CANNOT OPEN FILE! (ERROR 8)" << endl;
+		cout << "CANNOT OPEN FILE! (ERROR 9)" << endl;
 		exit(-1);
 	}
 
@@ -2325,7 +2486,7 @@ void generateFinalTranscripts(ofstream & it)
         }
         else
         {
-                cout << "CANNOT OPEN FILE! (ERROR 9)" << endl;
+                cout << "CANNOT OPEN FILE! (ERROR 10)" << endl;
                 exit(-1);
         }
 
@@ -2459,11 +2620,12 @@ void print()
 	cout << "--closeGap closes sequencing gaps using PE read information (default: none)" << endl;
 	cout << "--noAlignment skips the initial time-consuming alignment step, if all the alignment files have been provided in tmp directory (default: none)" << endl;
 	cout << "--lowEukaryote runs in a different mode for low eukaryotes with rare splice variants (default: none)" << endl;
+	cout << "--misassemblyRemoval detects and then breaks at or removes misassembed regions (default: none)" << endl;
 }
 
 int main(int argc, char * argv[])
 {
-	int contiID, i, seqID, tagRead1 = 0, tagRead2 = 0, tagTransfrag = 0, tagContig = 0, threshSize = 2, threshCov = 2, threshConn = 2, threshSplit = 2, tagThreshSize = 0, tagThreshCov = 0, tagThreshConn = 0, tagTranscript = 0, tagThreshSplit = 0, tagInsertLow = 0, tagInsertHigh = 0, insertLow = 0, insertHigh = MAX, tagGene = 0, tagCloseGap = 0, tagNoAlignment = 0, tagLowEukaryote = 0;
+	int contiID, i, seqID, tagRead1 = 0, tagRead2 = 0, tagTransfrag = 0, tagContig = 0, threshSize = 2, threshCov = 2, threshConn = 2, threshSplit = 2, tagThreshSize = 0, tagThreshCov = 0, tagThreshConn = 0, tagTranscript = 0, tagThreshSplit = 0, tagInsertLow = 0, tagInsertHigh = 0, insertLow = 0, insertHigh = MAX, tagGene = 0, tagCloseGap = 0, tagNoAlignment = 0, tagLowEukaryote = 0, tagMisassemblyRemoval = 0;
 	ifstream r1, r2, t, ci;
 	ofstream g, it, iit, co;
 	string s, st, command, sCheck;
@@ -2485,7 +2647,7 @@ int main(int argc, char * argv[])
 			r1.open(argv[++ i]);
 			if(!r1.is_open())
 			{
-				cout << "CANNOT OPEN FILE! (ERROR 10)" << endl;
+				cout << "CANNOT OPEN FILE! (ERROR 11)" << endl;
 				print();
 				return 0;
 			}
@@ -2501,7 +2663,7 @@ int main(int argc, char * argv[])
 			r2.open(argv[++ i]);
 			if(!r2.is_open())
 			{
-				cout << "CANNOT OPEN FILE! (ERROR 11)" << endl;
+				cout << "CANNOT OPEN FILE! (ERROR 12)" << endl;
 				print();
 				return 0;
 			}
@@ -2517,7 +2679,7 @@ int main(int argc, char * argv[])
 			t.open(argv[++ i]);
 			if(!t.is_open())
 			{
-				cout << "CANNOT OPEN FILE! (ERROR 12)" << endl;
+				cout << "CANNOT OPEN FILE! (ERROR 13)" << endl;
 				print();
 				return 0;
 			}
@@ -2534,7 +2696,7 @@ int main(int argc, char * argv[])
 			ci.open(argv[++ i]);
 			if(!ci.is_open())
 			{
-				cout << "CANNOT OPEN FILE! (ERROR 13)" << endl;
+				cout << "CANNOT OPEN FILE! (ERROR 14)" << endl;
 				print();
 				return 0;
 			}
@@ -2550,7 +2712,7 @@ int main(int argc, char * argv[])
                         it.open(argv[++ i]);
                         if(!it.is_open())
                         {
-                                cout << "CANNOT OPEN FILE! (ERROR 14)" << endl;
+                                cout << "CANNOT OPEN FILE! (ERROR 15)" << endl;
                                 print();
                                 return 0;
                         }
@@ -2566,7 +2728,7 @@ int main(int argc, char * argv[])
                         g.open(argv[++ i]);
                         if(!g.is_open())
                         {
-                                cout << "CANNOT OPEN FILE! (ERROR 15)" << endl;
+                                cout << "CANNOT OPEN FILE! (ERROR 16)" << endl;
                                 print();
                                 return 0;
                         }
@@ -2671,6 +2833,15 @@ int main(int argc, char * argv[])
                         }
                         tagLowEukaryote = 1;
                 }
+		else if(s == "--misassemblyRemoval")
+		{
+			if(tagMisassemblyRemoval == 1)
+			{
+				print();
+				return 0;
+			}
+			tagMisassemblyRemoval = 1;
+		}
 		else if(s == "--insertLow")
 		{
 			if(tagInsertLow == 1 || i == argc - 1)
@@ -2782,7 +2953,7 @@ int main(int argc, char * argv[])
 		transformSegJuncVec(iit, contiID, seqID);
 	}
 
-	generateFinalTranscripts(it);
+	generateFinalTranscripts(it, tagMisassemblyRemoval, threshCov);
 	cout << "(6) Transcripts generated" << endl;
 	return 1;
 }
